@@ -57,8 +57,8 @@ def preProcessing():
 
     classnames = ['AMD', 'DME', 'ERM', 'NO', 'RAO', 'RVO', 'VID']
 
-    for classname in classnames:
-        resize_and_save(classname)
+    #for classname in classnames:
+        #resize_and_save(classname)
 
 
     # hyperparameters - to be adjusted
