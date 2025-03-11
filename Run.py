@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
 
     train_dl, test_dl = preProcessing()
-
+    print("1")
     # initialize gen and disc, note: discriminator should be called critic,
     # according to WGAN paper (since it no longer outputs between [0, 1])
     gen = Generator(Z_DIM, CHANNELS_IMG, FEATURES_GEN).to(device)
