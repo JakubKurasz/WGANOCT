@@ -15,13 +15,13 @@ from tqdm import tqdm
 
 
 if __name__ == "__main__":
-    # Hyperparameters etc.
+   # Hyperparameters etc.
     device = "cuda" if torch.cuda.is_available() else "cpu"
     LEARNING_RATE = 1e-4
     BATCH_SIZE = 32
     CHANNELS_IMG = 1
     Z_DIM = 100
-    NUM_EPOCHS = 500
+    NUM_EPOCHS = 200
     FEATURES_CRITIC = 16
     FEATURES_GEN = 16
     CRITIC_ITERATIONS = 5
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
 
     train_dl, test_dl = preProcessing()
-    print("1")
+
     # initialize gen and disc, note: discriminator should be called critic,
     # according to WGAN paper (since it no longer outputs between [0, 1])
     gen = Generator(Z_DIM, CHANNELS_IMG, FEATURES_GEN).to(device)
@@ -37,13 +37,12 @@ if __name__ == "__main__":
     initialize_weights(gen)
     initialize_weights(critic)
 
-    fixed_noise = torch.randn(32, Z_DIM, 1, 1).to(device)
-
     # initializate optimizer
     opt_gen = optim.Adam(gen.parameters(), lr=LEARNING_RATE, betas=(0.0, 0.9))
     opt_critic = optim.Adam(critic.parameters(), lr=LEARNING_RATE, betas=(0.0, 0.9))
 
-
+    # for tensorboard plotting
+    fixed_noise = torch.randn(32, Z_DIM, 1, 1).to(device)
     step = 0
 
     gen.train()
@@ -87,10 +86,11 @@ if __name__ == "__main__":
                 with torch.no_grad():
                     fake = gen(fixed_noise)
                     # take out (up to) 32 examples
-
+                    img_grid_real = torchvision.utils.make_grid(real[:32], normalize=True)
                     img_grid_fake = torchvision.utils.make_grid(fake[:32], normalize=True)
+
 
                     output_path = "fake_image.png"
                     torchvision.utils.save_image(img_grid_fake, output_path)
-
+                    
                 step += 1
