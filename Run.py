@@ -1,9 +1,9 @@
 
-from PreProccesing import preProcessing
-from Model import Generator
-from Model import Discriminator
-from Model import gradient_penalty
-from Model import initialize_weights
+from .PreProccesing import preProcessing
+from .Model import Generator
+from .Model import Discriminator
+from .Model import gradient_penalty
+from .Model import initialize_weights
 import torch
 import torch.nn as nn
 import torch.optim as optim
