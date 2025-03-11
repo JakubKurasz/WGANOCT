@@ -90,4 +90,4 @@ def preProcessing():
         #break
         #print(f"Image shape: {x.shape}")
     return train_dl, test_dl
-preProcessing()
+
