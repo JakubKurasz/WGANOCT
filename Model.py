@@ -21,15 +21,26 @@ FEATURES_GEN = 546
 CRITIC_ITERATIONS = 1
 WEIGHT_CLIP = 0.01
 
-#function to show images
-def show_imgs(x, _, new_fig=True):
-    grid = vutils.make_grid(x.detach().cpu(), nrow=8, normalize=True, pad_value=0.3)
-    grid = grid.transpose(0,2).transpose(0,1) # channels as last dimension
-    if new_fig:
-        plt.figure(figsize=(16,12))
-    plt.title(f"Label: {_}")
-    plt.imshow(grid.numpy())
-    plt.show()
+def gradient_penalty(critic, real, fake, device="cpu"):
+    BATCH_SIZE, C, H, W = real.shape
+    alpha = torch.rand((BATCH_SIZE, 1, 1, 1)).repeat(1, C, H, W).to(device)
+    interpolated_images = real * alpha + fake * (1 - alpha)
+
+    # Calculate critic scores
+    mixed_scores = critic(interpolated_images)
+
+    # Take the gradient of the scores with respect to the images
+    gradient = torch.autograd.grad(
+        inputs=interpolated_images,
+        outputs=mixed_scores,
+        grad_outputs=torch.ones_like(mixed_scores),
+        create_graph=True,
+        retain_graph=True,
+    )[0]
+    gradient = gradient.view(gradient.shape[0], -1)
+    gradient_norm = gradient.norm(2, dim=1)
+    gradient_penalty = torch.mean((gradient_norm - 1) ** 2)
+    return gradient_penalty
 
 # custom weights initialization called on ``netG`` and ``netD``
 def initialize_weights(model):
