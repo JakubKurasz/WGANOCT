@@ -93,6 +93,6 @@ if __name__ == "__main__":
 
                     output_path = "fake_image.png"
                     torchvision.utils.save_image(img_grid_fake, output_path)
-                    torch.save(gen.state_dict(), "/gen.pth")
+                    torch.save(gen.state_dict(), "gen.pth")
                 step += 1
     
