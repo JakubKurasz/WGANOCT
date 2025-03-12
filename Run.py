@@ -5,6 +5,7 @@ from Model import Discriminator
 from Model import gradient_penalty
 from Model import initialize_weights
 import torch
+import pickle
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
@@ -94,3 +95,5 @@ if __name__ == "__main__":
                     torchvision.utils.save_image(img_grid_fake, output_path)
                     
                 step += 1
+    with open('trained_WGAN.pkl', 'wb') as file:  # 'wb' for write binary
+        pickle.dump(gen, file)
