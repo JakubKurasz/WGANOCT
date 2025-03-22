@@ -51,17 +51,19 @@ if __name__ == "__main__":
 
     for epoch in range(NUM_EPOCHS):
         # Target labels not needed! <3 unsupervised
-        for batch_idx, (real, _) in enumerate(train_dl):
+        for batch_idx, (real, labels) in enumerate(train_dl):
             real = real.to(device)
             cur_batch_size = real.shape[0]
+            lables = labels.to(device)
+
             # Train Critic: max E[critic(real)] - E[critic(fake)]
             # equivalent to minimizing the negative of that
             for _ in range(CRITIC_ITERATIONS):
                 noise = torch.randn(cur_batch_size, Z_DIM, 1, 1).to(device)
-                fake = gen(noise)
-                critic_real = critic(real).reshape(-1)
-                critic_fake = critic(fake).reshape(-1)
-                gp = gradient_penalty(critic, real, fake, device=device)
+                fake = gen(noise,labels)
+                critic_real = critic(real,labels).reshape(-1)
+                critic_fake = critic(fake,labels).reshape(-1)
+                gp = gradient_penalty(critic, labels, real, fake, device=device)
                 loss_critic = (
                     -(torch.mean(critic_real) - torch.mean(critic_fake)) + LAMBDA_GP * gp
                 )

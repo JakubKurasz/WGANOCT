@@ -21,13 +21,13 @@ FEATURES_GEN = 546
 CRITIC_ITERATIONS = 1
 WEIGHT_CLIP = 0.01
 
-def gradient_penalty(critic, real, fake, device="cpu"):
+def gradient_penalty(critic, labels, real, fake, device="cpu"):
     BATCH_SIZE, C, H, W = real.shape
     alpha = torch.rand((BATCH_SIZE, 1, 1, 1)).repeat(1, C, H, W).to(device)
     interpolated_images = real * alpha + fake * (1 - alpha)
 
     # Calculate critic scores
-    mixed_scores = critic(interpolated_images)
+    mixed_scores = critic(interpolated_images,labels)
 
     # Take the gradient of the scores with respect to the images
     gradient = torch.autograd.grad(
@@ -54,7 +54,7 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
         self.disc = nn.Sequential(
             #input image of size 546 * 199
-            nn.Conv2d(channels_img, features_d, kernel_size=[3,4], stride=2, padding=1),
+            nn.Conv2d(channels_img+1, features_d, kernel_size=[3,4], stride=2, padding=1),
             nn.LeakyReLU(0.2),# img: 273x100
             self._block(features_d, features_d * 2, 4, 2, 1),  # img: 136x50
             self._block(features_d * 2, features_d * 4, 4, 2, 1),  # img: 68x25
@@ -65,6 +65,9 @@ class Discriminator(nn.Module):
             # After all _block img output is 4x4 (Conv2d below makes into 1x1)
             nn.Conv2d(features_d * 64, 1, kernel_size=[3,4], stride=[3,4], padding=0),
         )
+        self.num_classes = 7
+        self.image_size = 108654
+        self.embed = nn.Embedding(self.num_classes, self.image_size )
 
 
     def _block(self, in_channels, out_channels, kernel_size, stride, padding):
@@ -81,7 +84,9 @@ class Discriminator(nn.Module):
             nn.LeakyReLU(0.2),
         )
 
-    def forward(self, x):
+    def forward(self, x, labels):
+        embedding = self.embed(labels).view(labels.shape[0],1,546, 199)
+        x = torch.cat([x,embedding], dim=1)
         return self.disc(x)
 
 
@@ -90,7 +95,7 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
         self.net = nn.Sequential(
             # Input: N x channels_noise x 1 x 1
-            self._block(channels_noise, features_g * 128, [3,4], 1, 0),  # img: 4x3
+            self._block(channels_noise+100, features_g * 128, [3,4], 1, 0),  # img: 4x3
             self._block(features_g * 128, features_g * 64, [1,4], [1,2], [0,1]),  # img: 8x3
             self._block(features_g * 64, features_g * 32, [4,5], 2, 1),  # img: 17x6
             self._block(features_g * 32, features_g * 16, 4, 2, 1),  # img: 34x12
@@ -103,6 +108,7 @@ class Generator(nn.Module):
             # Output: N x channels_img x 546 x 199
             nn.Tanh(),
         )
+        self.embed = nn.Embedding(7, 100)
 
 
     def _block(self, in_channels, out_channels, kernel_size, stride, padding):
@@ -119,7 +125,9 @@ class Generator(nn.Module):
             nn.ReLU(),
         )
 
-    def forward(self, x):
+    def forward(self, x,labels):
+        embedding = self.embed(labels).unsqueeze(2).unsqueeze(3)
+        x = torch.cat([x,embedding], dim=1)
         return self.net(x)
 
 
